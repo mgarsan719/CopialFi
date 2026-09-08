@@ -1,0 +1,1222 @@
+// Copial, S.L. - Modern Industrial Filtration Web Application (React)
+
+const { useState, useEffect, useMemo } = React;
+
+// Lucide Icon Helpers (renders SVG icons directly for fast browser execution)
+const Icon = ({ name, size = 20, className = "" }) => {
+  const icons = {
+    Filter: <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>,
+    Search: <g><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></g>,
+    Sun: <g><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></g>,
+    Moon: <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>,
+    ChevronRight: <path d="M9 18l6-6-6-6"/>,
+    CheckCircle: <g><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></g>,
+    Award: <g><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></g>,
+    Factory: <g><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4H2z"/></g>,
+    Layers: <g><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></g>,
+    Phone: <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>,
+    Mail: <g><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></g>,
+    MapPin: <g><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></g>,
+    Info: <g><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></g>,
+    Calculator: <g><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="16" y1="18" x2="16" y2="18"/><line x1="12" y1="18" x2="12" y2="18"/><line x1="8" y1="18" x2="8" y2="18"/></g>,
+    ArrowRight: <line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" strokeWidth="2"/>,
+    X: <g><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></g>
+  };
+
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      {icons[name] || null}
+    </svg>
+  );
+};
+
+// Raw Products Data from Catalog
+const PRODUCTS_DATA = [
+  {
+    id: 'tejidos-tecnicos',
+    title: 'Tejidos Técnicos Sintéticos',
+    category: 'Tejidos Sintéticos',
+    image: 'assets/hero.jpg',
+    badge: 'Stock Estándar',
+    shortDesc: 'Tejidos sintéticos para separación sólido-líquido y aplicaciones técnicas en PP, PA y PES con hilos de monofilamento, multifilamento y fibra corta.',
+    fullDesc: 'Comercializamos todo tipo de tejidos sintéticos para separación de sólido-líquido y otras aplicaciones técnicas. Nuestros principales artículos se componen de fibras como Polipropileno (PP), Poliamida (PA) y Poliéster (PES) con hilos de monofilamento, multifilamento y fibra cortada en un ancho máximo de 300 cm. Disponemos de amplio stock para suministro en rollo o precortado por láser.',
+    specs: ['Ancho Máx. 300 cm', 'PP, PA y PES', 'Monofilamento / Multifilamento', 'Corte por Láser'],
+    materials: ['Polipropileno (PP)', 'Poliamida (PA)', 'Poliéster (PES)'],
+    applications: ['Separación Sólido-Líquido', 'Filtración Química', 'Procesos Textiles']
+  },
+  {
+    id: 'telas-filtros-prensa',
+    title: 'Telas para Filtros Prensa',
+    category: 'Filtros Prensa',
+    image: 'assets/filter_press.jpg',
+    badge: 'Alta Resistencia',
+    shortDesc: 'Confección con collarín estándar, reforzado de caucho o telas a caballo para filtros de cámara y membrana de cualquier dimensión.',
+    fullDesc: 'Las telas para filtros prensa se fabrican a la medida exacta del equipo. Pueden confeccionarse con collarín estándar, especial reforzado o de caucho de alta estanqueidad, o bien telas a caballo para todo tipo y tamaño de placas de filtros prensa de cámara o membrana.',
+    specs: ['Collarín de Caucho Reforzado', 'Telas a Caballo', 'Filtros Cámara / Membrana', 'Sellado Hermético'],
+    materials: ['Polipropileno Reforzado', 'Poliéster', 'Caucho Sintético'],
+    applications: ['Depuración de Aguas', 'Minería', 'Industria Química']
+  },
+  {
+    id: 'bandas-filtros-presion',
+    title: 'Bandas para Filtros de Presión',
+    category: 'Bandas de Filtración',
+    image: 'assets/filter_belts.jpg',
+    badge: '15 Tipos Disponibles',
+    shortDesc: 'Gama de 15 tipos de bandas para filtros de presión con permeabilidades y tamaños de poro calibrados para un amplio rango industrial.',
+    fullDesc: 'Alrededor de 15 tipos de bandas para filtros de presión con diferentes permeabilidades y tamaños de poro. Ideales para aplicaciones que van desde el clarificado de jugos de fruta hasta la deshidratación de fangos en depuradoras de aguas residuales industriales o urbanas.',
+    specs: ['15 Tipos de Permeabilidad', 'Deshidratación Fangos', 'Luz Poro Calibrada', 'Alta Resistencia Mecánica'],
+    materials: ['Poliéster de Alta Tenacidad', 'Polipropileno'],
+    applications: ['Depuradoras EDAR / EDARI', 'Zumos y Alimentos', 'Papelera']
+  },
+  {
+    id: 'bandas-filtros-vacio',
+    title: 'Bandas para Filtros de Vacío',
+    category: 'Bandas de Filtración',
+    image: 'assets/filter_belts.jpg',
+    badge: 'Cliper Inox & Neopreno',
+    shortDesc: 'Bandas en PP o PES, sencillas o "double weave", con uniones cliper inoxidable y babero de protección en neopreno para evitar fugas.',
+    fullDesc: 'Bandas fabricadas en PP o PES, disponibles en estructura sencilla o "double weave". Se suministran en diferentes anchos con uniones de alta precisión como cliper de acero inoxidable equipado con babero de protección para evitar fugas de producto a través del empalme. Orillos reforzados con tratamiento especial de neopreno.',
+    specs: ['Estructura Double Weave', 'Empalme Cliper Inox', 'Babero de Neopreno', 'Orillos Reforzados'],
+    materials: ['PP', 'PES', 'Acero Inoxidable AISI 316', 'Neopreno'],
+    applications: ['Filtración Continua a Vacío', 'Minería y Metalurgia', 'Química Básica']
+  },
+  {
+    id: 'filtros-de-hojas',
+    title: 'Filtros de Hojas',
+    category: 'Filtros Vacío',
+    image: 'assets/hero.jpg',
+    badge: 'Baja Concentración',
+    shortDesc: 'Especiales para separación de sólidos en suspensión con baja concentración, como en la fabricación de dióxido de titanio (TiO2).',
+    fullDesc: 'Utilizados fundamentalmente en la separación de sólidos en suspensión con baja concentración donde se requiere máxima claridad de filtrado. Ejemplo emblemático: procesos de obtención de dióxido de titanio y químicos de alta pureza.',
+    specs: ['Clarificación Fina', 'Resistencia a Titanio TiO2', 'Alta Eficiencia', 'Larga Vida Útil'],
+    materials: ['Polipropileno Técnico', 'PTFE Membrane', 'PES'],
+    applications: ['Producción TiO2', 'Industria Química Fina', 'Pigmentos']
+  },
+  {
+    id: 'filtros-vacio-rotativos',
+    title: 'Filtros de Vacío (Discos, Pan & Rotativos)',
+    category: 'Filtros Vacío',
+    image: 'assets/hero.jpg',
+    badge: 'Confección a Medida',
+    shortDesc: 'Tejidos y sectores para todo tipo de filtros de vacío: discos, pan filters, filtros rotativos de tambor y bandas horizontales.',
+    fullDesc: 'Comercializamos tejidos y sectores confeccionados para todo tipo de filtros de vacío como filtros de disco, pan filters, filtros rotativos entre otros. Diseñados para óptima desprendibilidad de la torta y gran caudal de paso.',
+    specs: ['Filtros de Disco', 'Pan Filters', 'Tambor Rotativo', 'Bajos Tiempos de Parada'],
+    materials: ['PP Monofilamento', 'PA Multifilamento'],
+    applications: ['Sector Minero', 'Metalurgia', 'Procesado de Minerales']
+  },
+  {
+    id: 'mantas-mangas-filtrantes',
+    title: 'Mantas y Mangas Filtrantes',
+    category: 'Mantas y Mangas',
+    image: 'assets/filter_bags.jpg',
+    badge: 'Membrana PTFE',
+    shortDesc: 'Mangas para gases y polvos industriales en cualquier longitud/diámetro con aro o snap ring. Acabados anti-colmatación.',
+    fullDesc: 'Comercializamos mangas filtrantes para la filtración de gases y polvos para diferentes industrias en cualquier longitud o diámetro con aro rígido o snap ring flexible. Las mangas pueden ir provistas de acabados técnicos como gaseado, baño hidrófugo/oleófugo o membrana de PTFE para evitar una temprana colmatación.',
+    specs: ['Aro Rígido / Snap Ring', 'Membrana PTFE', 'Tratamiento Gaseado/Baño', 'Cualquier Longitud/Diámetro'],
+    materials: ['Poliéster Agujereado', 'Polipropileno', 'PTFE', 'Meta-aramida / Nomex'],
+    applications: ['Centrales Térmicas', 'Cementeras', 'Silos de Polvo']
+  },
+  {
+    id: 'sacos-centrifuga',
+    title: 'Sacos para Centrífuga',
+    category: 'Especiales',
+    image: 'assets/filter_bags.jpg',
+    badge: 'Diseño s/ Plano',
+    shortDesc: 'Sacos para centrífuga de carga superior y descarga central o superior, confeccionados según planos o muestra.',
+    fullDesc: 'Sacos con las formas más variadas para carga superior y descarga central o superior. Para la confección de un saco se parte de los planos del constructor de la máquina o bien de un saco de muestra existente.',
+    specs: ['Carga Superior', 'Descarga Central/Superior', 'Confección s/ Plano', 'Ajuste Perfecto'],
+    materials: ['Polipropileno', 'Poliéster', 'Poliamida'],
+    applications: ['Química Farmacéutica', 'Separación Centrífuga', 'Alimentación']
+  },
+  {
+    id: 'rasquetas-limpieza',
+    title: 'Rasquetas Industriales de Limpieza',
+    category: 'Accesorios',
+    image: 'assets/rasquetas.jpg',
+    badge: '3 Niveles de Dureza',
+    shortDesc: 'Rasquetas para rascar y extraer materia pastosa sin dañar telas o placas. Codificadas por color: Blanca, Azul y Roja.',
+    fullDesc: 'Las rasquetas cubren la necesidad de rascar, extender o extraer cualquier materia pastosa sin riesgo a dañar las telas, placas o recipientes. Disponibles en tres tipos de dureza identificadas por su color: Blanco (flexible), Azul (normal) y Rojo (rígida).',
+    specs: ['Blanco: Flexible', 'Azul: Normal', 'Rojo: Rígida', 'Protección de Telas'],
+    materials: ['Polímero Técnico Antirrayado'],
+    applications: ['Limpieza de Filtros Prensa', 'Mantenimiento Industrial']
+  },
+  {
+    id: 'tejidos-calibrados',
+    title: 'Tejidos Calibrados Sintéticos',
+    category: 'Mallas y Calibrados',
+    image: 'assets/hero.jpg',
+    badge: '7 a 4000 Micras',
+    shortDesc: 'Tejidos calibrados en nylon, poliéster y PP de 7 a 4000 micras. Bordes cosidos, ultrasonido o elementos plisados.',
+    fullDesc: 'Tejidos calibrados sintéticos en nylon, poliéster y polipropileno desde 7 hasta 4000 micras de luz de malla con diferentes diámetros de hilo según se busque alta capacidad de filtración o alta tenacidad. Suministramos elementos confeccionados a medida, con bordes cosidos o soldados por ultrasonido, y elementos plisados de una o varias capas.',
+    specs: ['Precisión 7 a 4000 µm', 'Soldadura Ultrasonido', 'Elementos Plisados', 'Alta Tenacidad'],
+    materials: ['Nylon (PA)', 'Poliéster (PES)', 'Polipropileno (PP)'],
+    applications: ['Filtración de Precisión', 'Laboratorio', 'Pinturas y Tintas']
+  },
+  {
+    id: 'mallas-metalicas',
+    title: 'Tejidos y Mallas Metálicas',
+    category: 'Mallas y Calibrados',
+    image: 'assets/hero.jpg',
+    badge: '1 µm a 16 mm',
+    shortDesc: 'Mallas en acero, cobre, monel y hastelloy con luces de malla de 1 micra a 16 mm para exigencias térmicas y químicas.',
+    fullDesc: 'Comercializamos gran variedad de metales y aleaciones como acero inoxidable (AISI 304/316), cobre, monel, hastelloy, etc. con luces de malla desde 1 micra hasta 16 mm. Suministramos elementos filtrantes fabricados con mallas metálicas para gran variedad de aplicaciones en todos los campos industriales.',
+    specs: ['Luces de 1 µm a 16 mm', 'Acero Inox, Monel, Hastelloy', 'Resistencia Térmica Extrema', 'Confección a Medida'],
+    materials: ['Acero Inoxidable AISI 304 / 316', 'Cobre', 'Monel', 'Hastelloy'],
+    applications: ['Petroquímica', 'Altas Temperaturas', 'Filtración de Aceites Hot']
+  },
+  {
+    id: 'manta-filtrante-aire',
+    title: 'Manta Filtrante de Aire',
+    category: 'Mantas y Mangas',
+    image: 'assets/hero.jpg',
+    badge: 'Eficacia G2 a F5',
+    shortDesc: 'Mantas filtrantes de aire en rollos de 1-2m o paneles a medida para climatización y pintura. Eficacias G2, G3, G4, F5.',
+    fullDesc: 'Manta filtrante en rollo de 1 a 2 metros de ancho por 2 metros de largo o cortada en paneles para aire acondicionado industrial, cabinas de pintura y salas limpias. Disponibles en eficacias normalizadas G2, G3, G4 y F5.',
+    specs: ['Rollos 1-2m Ancho', 'Paneles Cortados a Medida', 'Eficacias G2, G3, G4, F5', 'Baja Pérdida de Carga'],
+    materials: ['Fibra Sintética Progresiva'],
+    applications: ['Cabinas de Pintura', 'HVAC Industrial', 'Purificación de Aire']
+  },
+  {
+    id: 'aerodeslizadores',
+    title: 'Tejidos Aerodeslizadores',
+    category: 'Sistemas Neumáticos',
+    image: 'assets/hero.jpg',
+    badge: 'Alta Abrasión',
+    shortDesc: 'Tejidos para transporte neumático en poliéster, meta-aramida y para-aramida con hilo multifilamento de alta resistencia.',
+    fullDesc: 'Tejidos para transporte neumático de sólidos en polvo en diferentes composiciones: poliéster, meta-aramida, para-aramida y con hilo de multifilamento que aumenta drásticamente la resistencia a la abrasión gracias a su suave superficie en comparación con aerodeslizadores de fibra corta tradicional.',
+    specs: ['Superficie Suave Multifilamento', 'Alta Resistencia Abrasión', 'Poliéster / Nomex / Kevlar', 'Transporte Neumático'],
+    materials: ['Poliéster', 'Meta-aramida', 'Para-aramida'],
+    applications: ['Transporte de Cemento', 'Silos de Yeso y Cal', 'Manipulación de Graneles']
+  }
+];
+
+// Technical Fiber Data Table (PDF Page 4)
+const FIBER_PROPERTIES_DATA = [
+  { name: 'RYTON PSS', density: '1.38', meltTemp: '285°C', maxWorkTemp: '200°C', acidMin: 4, acidOrg: 4, alkalis: 4, oxidants: 2, solvents: 4 },
+  { name: 'POLYAMIDE 6', density: '1.14', meltTemp: '215°C', maxWorkTemp: '180°C', acidMin: 2, acidOrg: 1, alkalis: 4, oxidants: 1, solvents: 3 },
+  { name: 'POLYAMIDE 6.6', density: '1.14', meltTemp: '255°C', maxWorkTemp: '180°C', acidMin: 2, acidOrg: 1, alkalis: 4, oxidants: 1, solvents: 3 },
+  { name: 'POLYAMIDE 11', density: '1.10', meltTemp: '190°C', maxWorkTemp: '140°C', acidMin: 2, acidOrg: 1, alkalis: 4, oxidants: 1, solvents: 3 },
+  { name: 'POLYESTER', density: '1.38', meltTemp: '260°C', maxWorkTemp: '160°C', acidMin: 3, acidOrg: 4, alkalis: 1, oxidants: 2, solvents: 1 },
+  { name: 'POLYESTER TREVIRA B', density: '1.31', meltTemp: '250°C', maxWorkTemp: '160°C', acidMin: 3, acidOrg: 4, alkalis: 1, oxidants: 2, solvents: 1 },
+  { name: 'POLYESTER PYLENE', density: '0.90', meltTemp: '165°C', maxWorkTemp: '110°C', acidMin: 3, acidOrg: 4, alkalis: 1, oxidants: 2, solvents: 1 },
+  { name: 'POLYETHYLENE', density: '1.00', meltTemp: '120°C', maxWorkTemp: '100°C', acidMin: 4, acidOrg: 4, alkalis: 4, oxidants: 2, solvents: 2 },
+  { name: 'TEFLON PTFE', density: '2.30', meltTemp: '330°C', maxWorkTemp: '290°C', acidMin: 4, acidOrg: 4, alkalis: 4, oxidants: 4, solvents: 4 },
+  { name: 'RHOVYL PVC', density: '1.40', meltTemp: '120°C', maxWorkTemp: '105°C', acidMin: 4, acidOrg: 4, alkalis: 4, oxidants: 2, solvents: 4 },
+  { name: 'PVDF', density: '1.78', meltTemp: '150°C', maxWorkTemp: '170°C', acidMin: 4, acidOrg: 4, alkalis: 4, oxidants: 3, solvents: 3 }
+];
+
+// Rating Stars Renderer Helper
+const StarRating = ({ count }) => {
+  return (
+    <span className="star-rating" title={`${count}/4 Estrellas`}>
+      {'★'.repeat(count)}{'☆'.repeat(4 - count)}
+    </span>
+  );
+};
+
+// Main App Component
+function App() {
+  const [theme, setTheme] = useState('dark');
+  const [activeTab, setActiveTab] = useState('inicio');
+  const [selectedCategory, setSelectedCategory] = useState('Todos');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [quoteFormData, setQuoteFormData] = useState({
+    productName: '',
+    width: '',
+    microns: '',
+    quantity: '',
+    company: '',
+    name: '',
+    email: '',
+    phone: '',
+    comments: ''
+  });
+  const [quoteSubmittedRef, setQuoteSubmittedRef] = useState(null);
+  const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
+  const [quoteSubmitError, setQuoteSubmitError] = useState(null);
+
+  // Fiber table search & filter state
+  const [fiberSearch, setFiberSearch] = useState('');
+  const [fiberTempFilter, setFiberTempFilter] = useState('all');
+
+  // Toggle Dark/Light Theme
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  // Categories list
+  const categories = ['Todos', 'Tejidos Sintéticos', 'Filtros Prensa', 'Bandas de Filtración', 'Filtros Vacío', 'Mantas y Mangas', 'Mallas y Calibrados', 'Especiales', 'Accesorios'];
+
+  // Filtered Products
+  const filteredProducts = useMemo(() => {
+    return PRODUCTS_DATA.filter(prod => {
+      const matchCategory = selectedCategory === 'Todos' || prod.category === selectedCategory;
+      const matchSearch = searchQuery === '' || 
+        prod.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        prod.shortDesc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        prod.specs.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        prod.materials.some(m => m.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchCategory && matchSearch;
+    });
+  }, [selectedCategory, searchQuery]);
+
+  // Filtered Fibers
+  const filteredFibers = useMemo(() => {
+    return FIBER_PROPERTIES_DATA.filter(f => {
+      const matchText = f.name.toLowerCase().includes(fiberSearch.toLowerCase());
+      const tempNum = parseInt(f.maxWorkTemp);
+      let matchTemp = true;
+      if (fiberTempFilter === 'high') matchTemp = tempNum >= 180;
+      if (fiberTempFilter === 'extreme') matchTemp = tempNum >= 200;
+      return matchText && matchTemp;
+    });
+  }, [fiberSearch, fiberTempFilter]);
+
+  // Open Quote Modal with auto product selection
+  const handleOpenQuote = (productName = '') => {
+    setQuoteFormData(prev => ({ ...prev, productName }));
+    setIsQuoteModalOpen(true);
+    setQuoteSubmittedRef(null);
+    setQuoteSubmitError(null);
+  };
+
+  // Submit Quote Form
+  const handleQuoteSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmittingQuote(true);
+    setQuoteSubmitError(null);
+
+    const refNum = 'COP-' + Math.floor(100000 + Math.random() * 900000);
+
+    const subjectStr = `Solicitud de Presupuesto [${refNum}]: ${quoteFormData.productName || 'Consulta General'}`;
+    const bodyStr = `REFERENCIA: ${refNum}\n\n` +
+      `DETALLES DEL PEDIDO:\n` +
+      `-----------------------------------\n` +
+      `Producto: ${quoteFormData.productName || 'No especificado'}\n` +
+      `Ancho / Dimensión: ${quoteFormData.width || 'No especificado'}\n` +
+      `Micras / Permeabilidad: ${quoteFormData.microns || 'No especificado'}\n` +
+      `Cantidad: ${quoteFormData.quantity || 'No especificado'}\n\n` +
+      `DATOS DEL CLIENTE:\n` +
+      `-----------------------------------\n` +
+      `Nombre: ${quoteFormData.name}\n` +
+      `Empresa: ${quoteFormData.company || 'No especificado'}\n` +
+      `Email: ${quoteFormData.email}\n` +
+      `Teléfono: ${quoteFormData.phone || 'No especificado'}\n\n` +
+      `COMENTARIOS:\n` +
+      `${quoteFormData.comments || 'Sin comentarios adicionales'}`;
+
+    const mailtoUrl = `mailto:jmpineda@copialsl.com?subject=${encodeURIComponent(subjectStr)}&body=${encodeURIComponent(bodyStr)}`;
+
+    // If running directly as local file (file://), open prefilled mailto directly
+    if (window.location.protocol === 'file:') {
+      window.location.href = mailtoUrl;
+      setQuoteSubmittedRef(refNum);
+      setIsSubmittingQuote(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/jmpineda@copialsl.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          _subject: subjectStr,
+          _template: 'table',
+          _captcha: 'false',
+          _replyto: quoteFormData.email,
+          Referencia: refNum,
+          Producto: quoteFormData.productName || 'No especificado',
+          Ancho_Dimension: quoteFormData.width || 'No especificado',
+          Micras_Permeabilidad: quoteFormData.microns || 'No especificado',
+          Cantidad: quoteFormData.quantity || 'No especificado',
+          Nombre_Cliente: quoteFormData.name,
+          Empresa: quoteFormData.company || 'No especificado',
+          Email_Contacto: quoteFormData.email,
+          Telefono: quoteFormData.phone || 'No especificado',
+          Comentarios: quoteFormData.comments || 'Sin comentarios adicionales'
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success !== "false") {
+        setQuoteSubmittedRef(refNum);
+      } else {
+        window.location.href = mailtoUrl;
+        setQuoteSubmittedRef(refNum);
+      }
+    } catch (err) {
+      console.error('Error enviando solicitud:', err);
+      window.location.href = mailtoUrl;
+      setQuoteSubmittedRef(refNum);
+    } finally {
+      setIsSubmittingQuote(false);
+    }
+  };
+
+  return (
+    <div className="app-container">
+      {/* Sticky Navbar */}
+      <header className="navbar">
+        <div className="navbar-container">
+          <div className="logo-brand" onClick={() => setActiveTab('inicio')} style={{ cursor: 'pointer' }}>
+            <div className="logo-icon">
+              <Icon name="Filter" size={24} />
+            </div>
+            <div>
+              <span>Copial, s.l.</span>
+              <span className="logo-subtitle">Filtros Industriales</span>
+            </div>
+          </div>
+
+          <ul className="nav-links">
+            <li className={`nav-item ${activeTab === 'inicio' ? 'active' : ''}`} onClick={() => setActiveTab('inicio')}>
+              Inicio
+            </li>
+            <li className={`nav-item ${activeTab === 'productos' ? 'active' : ''}`} onClick={() => setActiveTab('productos')}>
+              Productos
+            </li>
+            <li className={`nav-item ${activeTab === 'guia-tecnica' ? 'active' : ''}`} onClick={() => setActiveTab('guia-tecnica')}>
+              Guía Técnica Fibras
+            </li>
+            <li className={`nav-item ${activeTab === 'calculadora' ? 'active' : ''}`} onClick={() => setActiveTab('calculadora')}>
+              Calculadora
+            </li>
+            <li className={`nav-item ${activeTab === 'contacto' ? 'active' : ''}`} onClick={() => setActiveTab('contacto')}>
+              Contacto
+            </li>
+          </ul>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <button className="btn btn-icon" onClick={toggleTheme} title="Cambiar Tema Dark/Light">
+              <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={20} />
+            </button>
+            <button className="btn btn-primary" onClick={() => handleOpenQuote('')}>
+              <Icon name="Mail" size={18} /> Solicitar Presupuesto
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Dynamic Tab Views */}
+      {activeTab === 'inicio' && (
+        <>
+          {/* Hero Section */}
+          <section className="hero-section">
+            <div className="hero-content">
+              <div className="hero-badge">
+                <Icon name="Award" size={16} /> Fundada en 1981 • El Viso del Alcor (Sevilla)
+              </div>
+              <h1>Soluciones Industriales de Filtración Textil</h1>
+              <p className="hero-subtitle">
+                Especialistas en tejidos sintéticos de alta precisión, telas para filtros prensa, bandas de presión y vacío, mallas calibradas y mangas de filtración. Más de 40 años innovando para la industria global.
+              </p>
+              
+              <div className="hero-actions">
+                <button className="btn btn-primary" onClick={() => setActiveTab('productos')}>
+                  Explorar Catálogo <Icon name="ChevronRight" size={18} />
+                </button>
+                <button className="btn btn-outline" onClick={() => setActiveTab('calculadora')}>
+                  <Icon name="Calculator" size={18} /> Buscador de Soluciones
+                </button>
+              </div>
+
+              <div className="hero-stats">
+                <div>
+                  <div className="stat-number">+40 Años</div>
+                  <div className="stat-label">Experiencia Textil</div>
+                </div>
+                <div>
+                  <div className="stat-number">300 cm</div>
+                  <div className="stat-label">Ancho Máx. Stock</div>
+                </div>
+                <div>
+                  <div className="stat-number">7 a 4000 µm</div>
+                  <div className="stat-label">Precisión Calibrada</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="hero-visual">
+              <div className="hero-image-wrapper">
+                <img src="assets/hero.jpg" alt="Copial Filtros Industriales Tejido Sintético" />
+              </div>
+              <div className="hero-floating-card">
+                <div style={{ background: 'var(--color-brand-primary)', color: '#fff', padding: '0.6rem', borderRadius: '50%' }}>
+                  <Icon name="CheckCircle" size={24} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>Corte por Láser & Stock Estándar</div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Rollos y piezas precortadas a medida</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Quick Features Highlight */}
+          <section style={{ maxWidth: '1300px', margin: '4rem auto', padding: '0 2rem' }}>
+            <div className="section-title-wrapper">
+              <span className="section-tag">POR QUÉ ELEGIR COPIAL, S.L.</span>
+              <h2>Ingeniería y Fabricación a la Medida de tu Proceso</h2>
+              <p>Disponemos de un amplio catálogo de productos estándar en stock y capacidad de confección personalizada según planos o muestras.</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+              <div className="glass-panel" style={{ padding: '2rem' }}>
+                <div style={{ color: 'var(--color-brand-accent)', marginBottom: '1rem' }}>
+                  <Icon name="Layers" size={36} />
+                </div>
+                <h3 style={{ marginBottom: '0.8rem' }}>Variedad de Polímeros & Hilos</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
+                  Hilos en Monofilamento, Multifilamento y Fibra corta. Fibras en PP, PA, PES, PTFE, Ryton PSS, PVDF y aleaciones metálicas como AISI 316, Hastelloy y Monel.
+                </p>
+              </div>
+
+              <div className="glass-panel" style={{ padding: '2rem' }}>
+                <div style={{ color: 'var(--color-brand-accent)', marginBottom: '1rem' }}>
+                  <Icon name="Factory" size={36} />
+                </div>
+                <h3 style={{ marginBottom: '0.8rem' }}>Acabados de Alta Resistencia</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
+                  Collarines de caucho reforzado, empalmes cliper de acero inoxidable con babero de neopreno anti-fugas y sellados ultrasonido para máxima durabilidad.
+                </p>
+              </div>
+
+              <div className="glass-panel" style={{ padding: '2rem' }}>
+                <div style={{ color: 'var(--color-brand-accent)', marginBottom: '1rem' }}>
+                  <Icon name="CheckCircle" size={36} />
+                </div>
+                <h3 style={{ marginBottom: '0.8rem' }}>Soluciones para Todas las Industrias</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
+                  Servicio especializado para industria química, minero-metalúrgica, alimenticia, depuración de aguas (EDAR/EDARI), centrales térmicas, papelera y farmacéutica.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Featured Catalog Preview */}
+          <section style={{ maxWidth: '1300px', margin: '5rem auto', padding: '0 2rem' }}>
+            <div className="section-title-wrapper">
+              <span className="section-tag">CATÁLOGO DESTACADO</span>
+              <h2>Productos Principales de Filtración</h2>
+            </div>
+
+            <div className="products-grid">
+              {PRODUCTS_DATA.slice(0, 3).map(prod => (
+                <div key={prod.id} className="glass-panel product-card">
+                  <div className="product-card-image">
+                    <img src={prod.image} alt={prod.title} />
+                    <span className="product-badge">{prod.badge}</span>
+                  </div>
+                  <div className="product-card-body">
+                    <h3 className="product-card-title">{prod.title}</h3>
+                    <p className="product-card-desc">{prod.shortDesc}</p>
+                    <div className="product-specs-list">
+                      {prod.specs.map((spec, i) => (
+                        <span key={i} className="spec-tag">{spec}</span>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.6rem', marginTop: 'auto' }}>
+                      <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setSelectedProduct(prod)}>
+                        Ficha Técnica
+                      </button>
+                      <button className="btn btn-primary" onClick={() => handleOpenQuote(prod.title)}>
+                        Presupuesto
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+              <button className="btn btn-primary" onClick={() => setActiveTab('productos')} style={{ padding: '0.8rem 2rem' }}>
+                Ver Catálogo Completo (14+ Categorías) <Icon name="ChevronRight" size={18} />
+              </button>
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* Catalog Tab */}
+      {activeTab === 'productos' && (
+        <section style={{ padding: '3rem 0' }}>
+          <div className="section-title-wrapper">
+            <span className="section-tag">CATÁLOGO COMPLETO</span>
+            <h2>Nuestra Gama de Productos y Aplicaciones</h2>
+            <p>Filtra por categoría o utiliza el buscador para encontrar la solución textil ideal.</p>
+          </div>
+
+          <div className="catalog-controls">
+            <div className="search-box">
+              <Icon name="Search" size={20} className="search-icon" />
+              <input 
+                type="text" 
+                className="search-input" 
+                placeholder="Buscar por producto, material (ej. PTFE, PP, Inox), micras o aplicación..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <div className="category-pills">
+              {categories.map(cat => (
+                <button 
+                  key={cat} 
+                  className={`pill-btn ${selectedCategory === cat ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="products-grid">
+            {filteredProducts.map(prod => (
+              <div key={prod.id} className="glass-panel product-card">
+                <div className="product-card-image">
+                  <img src={prod.image} alt={prod.title} />
+                  <span className="product-badge">{prod.badge}</span>
+                </div>
+                <div className="product-card-body">
+                  <h3 className="product-card-title">{prod.title}</h3>
+                  <p className="product-card-desc">{prod.shortDesc}</p>
+                  <div className="product-specs-list">
+                    {prod.specs.map((spec, i) => (
+                      <span key={i} className="spec-tag">{spec}</span>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.6rem', marginTop: 'auto' }}>
+                    <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => setSelectedProduct(prod)}>
+                      Ver Ficha
+                    </button>
+                    <button className="btn btn-primary" onClick={() => handleOpenQuote(prod.title)}>
+                      Solicitar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Technical Guide Tab (Thread & Fiber Properties Tables) */}
+      {activeTab === 'guia-tecnica' && (
+        <section className="tech-guide-section">
+          <div className="section-title-wrapper">
+            <span className="section-tag">GUÍA TÉCNICA Y ESPECIFICACIONES</span>
+            <h2>Clasificación de Hilos y Propiedades de Fibras</h2>
+            <p>Guía de selección técnica según comportamiento en filtración y resistencia química/térmica.</p>
+          </div>
+
+          {/* Thread Classification Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
+            <div className="glass-panel" style={{ padding: '1.8rem' }}>
+              <h3 style={{ color: 'var(--color-brand-accent)', marginBottom: '0.6rem' }}>Monofilamento</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                Único filamento continuo de superficie suave y lisa. Se prensan con sección circular. Ofrece una superficie que favorece el despegue inmediato de los sólidos retenidos y maximiza el drenaje.
+              </p>
+            </div>
+            <div className="glass-panel" style={{ padding: '1.8rem' }}>
+              <h3 style={{ color: 'var(--color-brand-accent)', marginBottom: '0.6rem' }}>Multifilamento</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                Creado por múltiples filamentos continuos extruidos y retorcidos simultáneamente. Proporciona gran tenacidad, flexibilidad y excelente retención para aplicaciones exigentes.
+              </p>
+            </div>
+            <div className="glass-panel" style={{ padding: '1.8rem' }}>
+              <h3 style={{ color: 'var(--color-brand-accent)', marginBottom: '0.6rem' }}>Fibra Corta</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                Fabricado a partir de filamentos cortados en tramos cortos torcidos entre sí. Recomendado para filtración de gases o líquidos con baja concentración de sólidos y partículas muy finas.
+              </p>
+            </div>
+          </div>
+
+          {/* Thread Effect Matrix Table */}
+          <h3 style={{ marginBottom: '1.2rem', fontSize: '1.4rem' }}>Efecto del Hilo en el Proceso de Filtración</h3>
+          <div className="table-responsive" style={{ marginBottom: '4rem' }}>
+            <table className="tech-table">
+              <thead>
+                <tr>
+                  <th>Características de Funcionamiento</th>
+                  <th>Muy Bueno</th>
+                  <th>Bueno</th>
+                  <th>Pobre</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Retención de partículas</strong></td>
+                  <td><span style={{ color: '#10b981', fontWeight: 600 }}>Fibra Cortada</span></td>
+                  <td>Multifilamento</td>
+                  <td>Monofilamento</td>
+                </tr>
+                <tr>
+                  <td><strong>Drenaje</strong></td>
+                  <td><span style={{ color: '#10b981', fontWeight: 600 }}>Monofilamento</span></td>
+                  <td>Multifilamento</td>
+                  <td>Fibra Cortada</td>
+                </tr>
+                <tr>
+                  <td><strong>Sequedad de la torta</strong></td>
+                  <td><span style={{ color: '#10b981', fontWeight: 600 }}>Monofilamento</span></td>
+                  <td>Multifilamento</td>
+                  <td>Fibra Cortada</td>
+                </tr>
+                <tr>
+                  <td><strong>Duración de la torta</strong></td>
+                  <td><span style={{ color: '#10b981', fontWeight: 600 }}>Monofilamento</span></td>
+                  <td>Multifilamento</td>
+                  <td>Fibra Cortada</td>
+                </tr>
+                <tr>
+                  <td><strong>Duración total del tejido</strong></td>
+                  <td><span style={{ color: '#10b981', fontWeight: 600 }}>Fibra Cortada</span></td>
+                  <td>Multifilamento</td>
+                  <td>Monofilamento</td>
+                </tr>
+                <tr>
+                  <td><strong>Tendencia a la saturación</strong></td>
+                  <td><span style={{ color: '#10b981', fontWeight: 600 }}>Monofilamento</span> (Mínima)</td>
+                  <td>Multifilamento</td>
+                  <td>Fibra Cortada (Alta)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Fiber Chemical Properties Matrix Table */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+            <h3>Propiedades y Resistencia Química de las Fibras</h3>
+            <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap' }}>
+              <input 
+                type="text" 
+                placeholder="Buscar fibra (ej. PTFE, Ryton)..." 
+                value={fiberSearch}
+                onChange={(e) => setFiberSearch(e.target.value)}
+                style={{ padding: '0.4rem 0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', background: 'var(--bg-surface)', color: 'var(--text-main)' }}
+              />
+              <button className={`pill-btn ${fiberTempFilter === 'all' ? 'active' : ''}`} onClick={() => setFiberTempFilter('all')}>Todas</button>
+              <button className={`pill-btn ${fiberTempFilter === 'high' ? 'active' : ''}`} onClick={() => setFiberTempFilter('high')}>≥ 180°C</button>
+              <button className={`pill-btn ${fiberTempFilter === 'extreme' ? 'active' : ''}`} onClick={() => setFiberTempFilter('extreme')}>≥ 200°C</button>
+            </div>
+          </div>
+
+          <div className="table-responsive">
+            <table className="tech-table">
+              <thead>
+                <tr>
+                  <th>Fibra</th>
+                  <th>Peso Esp. (g/cm³)</th>
+                  <th>Temp. Fusión</th>
+                  <th>Max. Temp. Trabajo</th>
+                  <th>Ácidos Miner.</th>
+                  <th>Ácidos Org.</th>
+                  <th>Álcalis</th>
+                  <th>Oxidantes</th>
+                  <th>Disolventes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredFibers.map((f, i) => (
+                  <tr key={i}>
+                    <td><strong>{f.name}</strong></td>
+                    <td>{f.density}</td>
+                    <td>{f.meltTemp}</td>
+                    <td><span style={{ color: 'var(--color-brand-accent)', fontWeight: 600 }}>{f.maxWorkTemp}</span></td>
+                    <td><StarRating count={f.acidMin} /></td>
+                    <td><StarRating count={f.acidOrg} /></td>
+                    <td><StarRating count={f.alkalis} /></td>
+                    <td><StarRating count={f.oxidants} /></td>
+                    <td><StarRating count={f.solvents} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.6rem' }}>
+            Leyenda: ★★★★ Excelente (4) | ★★★ Muy Bueno (3) | ★★ Bueno (2) | ★ Limitado (1)
+          </p>
+        </section>
+      )}
+
+      {/* Filtration Calculator Tab */}
+      {activeTab === 'calculadora' && (
+        <section style={{ maxWidth: '1100px', margin: '4rem auto', padding: '0 2rem' }}>
+          <div className="section-title-wrapper">
+            <span className="section-tag">HERRAMIENTA TÉCNICA</span>
+            <h2>Buscador de Soluciones por Industria y Aplicación</h2>
+            <p>Selecciona tus parámetros operativos para obtener una recomendación de tejido y fibra personalizada.</p>
+          </div>
+
+          <InteractiveCalculator onSelectProduct={(name) => handleOpenQuote(name)} />
+        </section>
+      )}
+
+      {/* Contact Tab */}
+      {activeTab === 'contacto' && (
+        <section style={{ maxWidth: '1200px', margin: '4rem auto', padding: '0 2rem' }}>
+          <div className="section-title-wrapper">
+            <span className="section-tag">UBICACIÓN Y ATENCIÓN AL CLIENTE</span>
+            <h2>Contacta con Copial, S.L.</h2>
+            <p>Estamos a tu disposición para asesoramiento técnico y pedidos personalizados.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2.5rem' }}>
+            <div className="glass-panel" style={{ padding: '2.5rem' }}>
+              <h3 style={{ marginBottom: '1.5rem', color: 'var(--color-brand-accent)' }}>Información Oficial</h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <Icon name="MapPin" size={24} style={{ color: 'var(--color-brand-accent)' }} />
+                  <div>
+                    <strong>Dirección:</strong>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
+                      P.I. Sta Isabel c/Alicatadores, 23<br />
+                      41520 El Viso del Alcor (Sevilla), España
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <Icon name="Phone" size={24} style={{ color: 'var(--color-brand-accent)' }} />
+                  <div>
+                    <strong>Teléfonos:</strong>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
+                      Tel: +34 955 741 038<br />
+                      Fax: +34 955 741 254<br />
+                      Móvil: +34 615 264 338
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <Icon name="Mail" size={24} style={{ color: 'var(--color-brand-accent)' }} />
+                  <div>
+                    <strong>Correo Electrónico & Web:</strong>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem' }}>
+                      sales@copialsl.com<br />
+                      www.copialfi.es
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: '2rem' }}>
+                <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => handleOpenQuote('')}>
+                  Solicitar Presupuesto Directo
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Map Card */}
+            <div className="glass-panel" style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <h3 style={{ marginBottom: '1rem' }}>Centro de Producción & Logística</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.92rem' }}>
+                Ubicados estratégicamente en la provincia de Sevilla, ofrecemos envíos rápidos de tejidos en rollo y elementos confeccionados a toda España y mercados internacionales.
+              </p>
+              <div style={{ background: 'var(--bg-surface-hover)', borderRadius: 'var(--radius-md)', padding: '1.5rem', border: '1px solid var(--border-light)', textAlign: 'center' }}>
+                <Icon name="Factory" size={48} style={{ color: 'var(--color-brand-accent)', marginBottom: '0.5rem' }} />
+                <div style={{ fontWeight: '700' }}>Copial, S.L. - Planta Industrial</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Viso del Alcor (Sevilla)</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Product Details Modal */}
+      {selectedProduct && (
+        <div className="modal-overlay" onClick={() => setSelectedProduct(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedProduct(null)}>
+              <Icon name="X" size={24} />
+            </button>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.5rem' }}>
+              <img src={selectedProduct.image} alt={selectedProduct.title} style={{ width: '100%', height: '260px', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
+              <div>
+                <span className="product-badge" style={{ position: 'static' }}>{selectedProduct.badge}</span>
+                <h2 style={{ marginTop: '0.8rem', fontSize: '1.8rem' }}>{selectedProduct.title}</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginTop: '0.6rem' }}>{selectedProduct.shortDesc}</p>
+              </div>
+            </div>
+            
+            <h4 style={{ color: 'var(--color-brand-accent)', marginBottom: '0.5rem' }}>Descripción Detallada</h4>
+            <p style={{ fontSize: '0.95rem', marginBottom: '1.5rem', color: 'var(--text-main)' }}>{selectedProduct.fullDesc}</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+              <div>
+                <h4 style={{ marginBottom: '0.5rem' }}>Materiales Disponibles:</h4>
+                <ul style={{ listStyle: 'inside disc', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                  {selectedProduct.materials.map((m, idx) => <li key={idx}>{m}</li>)}
+                </ul>
+              </div>
+              <div>
+                <h4 style={{ marginBottom: '0.5rem' }}>Aplicaciones Clave:</h4>
+                <ul style={{ listStyle: 'inside disc', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                  {selectedProduct.applications.map((a, idx) => <li key={idx}>{a}</li>)}
+                </ul>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyRight: 'flex-end', gap: '1rem' }}>
+              <button className="btn btn-outline" onClick={() => setSelectedProduct(null)}>Cerrar</button>
+              <button className="btn btn-primary" onClick={() => { const name = selectedProduct.title; setSelectedProduct(null); handleOpenQuote(name); }}>
+                Solicitar Presupuesto para este Producto
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quote Request Modal */}
+      {isQuoteModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsQuoteModalOpen(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setIsQuoteModalOpen(false)}>
+              <Icon name="X" size={24} />
+            </button>
+            
+            {quoteSubmittedRef ? (
+              <div style={{ textCenter: 'center', padding: '2rem 0' }}>
+                <div style={{ color: '#10b981', margin: '0 auto 1rem', width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name="CheckCircle" size={36} />
+                </div>
+                <h2>¡Solicitud Recibida con Éxito!</h2>
+                <p style={{ color: 'var(--text-muted)', margin: '1rem 0' }}>
+                  Referencia de Cotización: <strong style={{ color: 'var(--color-brand-accent)' }}>{quoteSubmittedRef}</strong>
+                </p>
+                <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)' }}>
+                  Nuestro departamento técnico revisará sus especificaciones y le contactará en menos de 24 horas laborables.
+                </p>
+                <button className="btn btn-primary" style={{ marginTop: '2rem' }} onClick={() => setIsQuoteModalOpen(false)}>
+                  Entendido
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleQuoteSubmit}>
+                <h2 style={{ marginBottom: '0.5rem' }}>Solicitar Presupuesto Técnico</h2>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  Complete los detalles requeridos. Puede solicitar piezas precortadas por láser o rollos estándar.
+                </p>
+
+                <div className="calc-form-grid">
+                  <div className="form-group">
+                    <label>Producto o Tipo de Tejido</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Ej. Telas Filtro Prensa, Bandas Vacío..." 
+                      value={quoteFormData.productName} 
+                      onChange={(e) => setQuoteFormData({...quoteFormData, productName: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Ancho (cm) / Dimensión</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Ej. 120 cm (máx. 300 cm)" 
+                      value={quoteFormData.width}
+                      onChange={(e) => setQuoteFormData({...quoteFormData, width: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Luz de Malla / Micras (µm)</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Ej. 50 micras, G4, PTFE..." 
+                      value={quoteFormData.microns}
+                      onChange={(e) => setQuoteFormData({...quoteFormData, microns: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Cantidad (Metros / Unidades)</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Ej. 50 metros o 20 unidades" 
+                      value={quoteFormData.quantity}
+                      onChange={(e) => setQuoteFormData({...quoteFormData, quantity: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="calc-form-grid">
+                  <div className="form-group">
+                    <label>Nombre Completo</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Tu nombre" 
+                      value={quoteFormData.name}
+                      onChange={(e) => setQuoteFormData({...quoteFormData, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Empresa</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="Nombre de empresa" 
+                      value={quoteFormData.company}
+                      onChange={(e) => setQuoteFormData({...quoteFormData, company: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email de Contacto</label>
+                    <input 
+                      type="email" 
+                      className="form-control" 
+                      placeholder="ejemplo@empresa.com" 
+                      value={quoteFormData.email}
+                      onChange={(e) => setQuoteFormData({...quoteFormData, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Teléfono</label>
+                    <input 
+                      type="tel" 
+                      className="form-control" 
+                      placeholder="+34 600 000 000" 
+                      value={quoteFormData.phone}
+                      onChange={(e) => setQuoteFormData({...quoteFormData, phone: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                {quoteSubmitError && (
+                  <div style={{
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid #ef4444',
+                    color: '#fca5a5',
+                    padding: '0.8rem 1rem',
+                    borderRadius: 'var(--radius-md)',
+                    marginBottom: '1.2rem',
+                    fontSize: '0.9rem'
+                  }}>
+                    ⚠️ {quoteSubmitError}
+                  </div>
+                )}
+
+                <div className="form-group" style={{ marginBottom: '2rem' }}>
+                  <label>Comentarios o Especificaciones Especiales (Empalme cliper, babero neopreno, plano constructor)</label>
+                  <textarea 
+                    className="form-control" 
+                    rows="3" 
+                    placeholder="Indica detalles como tipo de collarín, temperatura de trabajo o fluidos procesados..."
+                    value={quoteFormData.comments}
+                    onChange={(e) => setQuoteFormData({...quoteFormData, comments: e.target.value})}
+                    disabled={isSubmittingQuote}
+                  ></textarea>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                  <button type="button" className="btn btn-outline" onClick={() => setIsQuoteModalOpen(false)} disabled={isSubmittingQuote}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={isSubmittingQuote}>
+                    {isSubmittingQuote ? 'Enviando solicitud...' : 'Enviar Solicitud'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <footer className="footer">
+        <div className="footer-container">
+          <div className="footer-brand">
+            <div className="logo-brand">
+              <div className="logo-icon"><Icon name="Filter" size={20} /></div>
+              <span>Copial, s.l.</span>
+            </div>
+            <p>
+              Fabricantes y distribuidores de tejidos sintéticos e industriales para la filtración desde 1981. Innovación, stock permanente y confección personalizada.
+            </p>
+          </div>
+
+          <div className="footer-col">
+            <h4>Navegación</h4>
+            <ul>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('inicio'); }}>Inicio</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('productos'); }}>Catálogo de Productos</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('guia-tecnica'); }}>Guía Técnica de Fibras</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('calculadora'); }}>Buscador de Soluciones</a></li>
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <h4>Gama de Productos</h4>
+            <ul>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('productos'); }}>Tejidos Técnicos PP/PES</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('productos'); }}>Telas para Filtros Prensa</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('productos'); }}>Bandas de Presión y Vacío</a></li>
+              <li><a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('productos'); }}>Mangas y Mantas Filtrantes</a></li>
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <h4>Contacto</h4>
+            <ul style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+              <li>P.I. Sta Isabel c/Alicatadores, 23</li>
+              <li>El Viso del Alcor (Sevilla) C.P. 41520</li>
+              <li>Tel: +34 955 741 038</li>
+              <li>sales@copialsl.com</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="footer-bottom">
+          <div>© {new Date().getFullYear()} Copial, S.L. - Todos los derechos reservados.</div>
+          <div>Soluciones Textiles para la Filtración Industrial</div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+// Interactive Calculator Component
+function InteractiveCalculator({ onSelectProduct }) {
+  const [machineType, setMachineType] = useState('filtro-prensa');
+  const [fluidType, setFluidType] = useState('solido-liquido');
+  const [temperature, setTemperature] = useState('normal');
+
+  const recommendation = useMemo(() => {
+    if (machineType === 'filtro-prensa') {
+      return {
+        product: 'Telas para Filtros Prensa',
+        fiber: 'Polipropileno (PP) o Poliéster (PES) Reforzado',
+        yarn: 'Monofilamento (Drenaje óptimo y fácil despegue) o Multifilamento',
+        microns: '20 - 100 µm',
+        notes: 'Recomendado confección con collarín de caucho reforzado para máximo estanqueidad en placas de cámara o membrana.'
+      };
+    } else if (machineType === 'banda-presion-vacio') {
+      return {
+        product: 'Bandas para Filtros de Presión y Vacío',
+        fiber: 'Poliéster (PES) o Polipropileno (PP) Double Weave',
+        yarn: 'Multifilamento de Alta Tenacidad',
+        microns: '15 tipos de permeabilidad calibrada',
+        notes: 'Incluye opción de empalme en acero inoxidable (cliper) con babero de neopreno y orillos reforzados antidesgaste.'
+      };
+    } else if (machineType === 'mangas-gas') {
+      return {
+        product: 'Mantas y Mangas Filtrantes (Gas/Polvo)',
+        fiber: temperature === 'alta' ? 'Teflón PTFE / Meta-Aramida (Nomex)' : 'Poliéster Agujereado con Membrana PTFE',
+        yarn: 'Fibra Cortada / Fieltro Agujereado',
+        microns: 'Gaseado y Baño Oleófugo',
+        notes: 'Provista con Snap Ring o aro metálico. Tratamiento anticolmatación para desprendimiento continuo de polvo.'
+      };
+    } else if (machineType === 'mallas-precision') {
+      return {
+        product: 'Tejidos Calibrados Sintéticos / Mallas Metálicas',
+        fiber: 'Nylon (PA), Poliéster o Acero Inox AISI 316',
+        yarn: 'Monofilamento / Malla Metálica',
+        microns: '7 a 4000 µm',
+        notes: 'Elementos precortados por ultrasonido o elementos plisados de una o varias capas.'
+      };
+    }
+    return {
+      product: 'Tejidos Técnicos Sintéticos',
+      fiber: 'PP, PA o PES',
+      yarn: 'Monofilamento / Multifilamento',
+      microns: 'Suministro en rollo o corte por láser',
+      notes: 'Ancho disponible de stock hasta 300 cm.'
+    };
+  }, [machineType, fluidType, temperature]);
+
+  return (
+    <div className="calculator-box">
+      <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <Icon name="Calculator" size={24} style={{ color: 'var(--color-brand-accent)' }} />
+        Configurador de Filtración Recomendada
+      </h3>
+
+      <div className="calc-form-grid">
+        <div className="form-group">
+          <label>1. Tipo de Equipo o Filtro</label>
+          <select className="form-control" value={machineType} onChange={(e) => setMachineType(e.target.value)}>
+            <option value="filtro-prensa">Filtro Prensa (Cámara / Membrana)</option>
+            <option value="banda-presion-vacio">Banda de Presión / Banda de Vacío</option>
+            <option value="mangas-gas">Captación de Gases / Polvo (Mangas)</option>
+            <option value="mallas-precision">Mallas de Calibrado / Tamizado</option>
+            <option value="tejido-general">Tejido en Rollo o Precortado</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>2. Medio a Filtrar</label>
+          <select className="form-control" value={fluidType} onChange={(e) => setFluidType(e.target.value)}>
+            <option value="solido-liquido">Separación Sólido - Líquido Estándar</option>
+            <option value="fangos-urbanos">Fangos EDAR / Depuración de Aguas</option>
+            <option value="quimico-agresivo">Químico Agresivo / Ácido / Álcali</option>
+            <option value="baja-concentracion">Baja Concentración (Clarificación TiO2)</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>3. Temperatura de Trabajo</label>
+          <select className="form-control" value={temperature} onChange={(e) => setTemperature(e.target.value)}>
+            <option value="normal">Normal (&lt; 100°C)</option>
+            <option value="media">Media (100°C - 160°C)</option>
+            <option value="alta">Alta (&gt; 180°C - 290°C PTFE)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Recommendation Output Card */}
+      <div style={{ background: 'var(--bg-surface-hover)', border: '1px solid var(--border-accent)', borderRadius: 'var(--radius-md)', padding: '1.8rem', marginTop: '1.5rem' }}>
+        <div style={{ textTransform: 'uppercase', fontSize: '0.78rem', letterSpacing: '1.5px', color: 'var(--color-brand-accent)', fontWeight: 700, marginBottom: '0.4rem' }}>
+          SOLUCIÓN RECOMENDADA POR COPIAL, S.L.
+        </div>
+        <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--text-main)' }}>{recommendation.product}</h3>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.2rem', fontSize: '0.92rem' }}>
+          <div><strong>Fibra Aconsejada:</strong> <br /><span style={{ color: 'var(--text-muted)' }}>{recommendation.fiber}</span></div>
+          <div><strong>Estructura de Hilo:</strong> <br /><span style={{ color: 'var(--text-muted)' }}>{recommendation.yarn}</span></div>
+          <div><strong>Rango / Permeabilidad:</strong> <br /><span style={{ color: 'var(--text-muted)' }}>{recommendation.microns}</span></div>
+        </div>
+
+        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-light)', paddingTop: '0.8rem', marginBottom: '1.2rem' }}>
+          💡 <em>{recommendation.notes}</em>
+        </p>
+
+        <button className="btn btn-primary" onClick={() => onSelectProduct(recommendation.product)}>
+          Solicitar Presupuesto para esta Solución Recomendada <Icon name="ArrowRight" size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Render Root
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
